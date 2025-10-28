@@ -440,3 +440,4 @@ tracing-subscriber = { version = "0.3", features = [
 
 [package.metadata.fslabs.publish.cargo]
 publish = true
+alternate_registries = ["fslabs-nominal"]
