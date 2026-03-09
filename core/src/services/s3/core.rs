@@ -88,6 +88,11 @@ pub mod constants {
     pub const S3_QUERY_VERSION_ID: &str = "versionId";
 }
 
+#[allow(missing_docs)]
+pub trait S3CredentialProvider: Send + Sync {
+    fn get_credential(&self) -> Option<AwsCredential>;
+}
+
 pub struct S3Core {
     pub info: Arc<AccessorInfo>,
 
@@ -104,6 +109,7 @@ pub struct S3Core {
     pub disable_list_objects_v2: bool,
     pub enable_request_payer: bool,
 
+    pub override_credential: Option<Arc<dyn S3CredentialProvider>>,
     pub signer: AwsV4Signer,
     pub loader: Box<dyn AwsCredentialLoad>,
     pub credential_loaded: AtomicBool,
@@ -123,6 +129,13 @@ impl Debug for S3Core {
 impl S3Core {
     /// If credential is not found, we will not sign the request.
     async fn load_credential(&self) -> Result<Option<AwsCredential>> {
+        // Prioritize override credential.
+        if let Some(override_credential) = self.override_credential.as_ref() {
+            if let Some(cred) = override_credential.get_credential() {
+                return Ok(Some(cred));
+            }
+        }
+
         let cred = self
             .loader
             .load_credential(GLOBAL_REQWEST_CLIENT.clone())

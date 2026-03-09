@@ -41,6 +41,7 @@ use reqsign::AwsDefaultLoader;
 use reqsign::AwsV4Signer;
 use reqwest::Url;
 
+use super::core::S3CredentialProvider;
 use super::core::*;
 use super::delete::S3Deleter;
 use super::error::parse_error;
@@ -77,6 +78,7 @@ impl Configurator for S3Config {
         S3Builder {
             config: self,
             customized_credential_load: None,
+            override_credential: None,
 
             http_client: None,
         }
@@ -92,6 +94,7 @@ pub struct S3Builder {
     config: S3Config,
 
     customized_credential_load: Option<Box<dyn AwsCredentialLoad>>,
+    override_credential: Option<Arc<dyn S3CredentialProvider>>,
 
     #[deprecated(since = "0.53.0", note = "Use `Operator::update_http_client` instead")]
     http_client: Option<HttpClient>,
@@ -472,6 +475,19 @@ impl S3Builder {
     /// credential load methods.
     pub fn customized_credential_load(mut self, cred: Box<dyn AwsCredentialLoad>) -> Self {
         self.customized_credential_load = Some(cred);
+        self
+    }
+
+    /// Set an override credential provider for this backend.
+    ///
+    /// This takes precedence over any other provided credentials, although
+    /// if the credential is deemed invalid, the backend will try to load from
+    /// other sources.
+    pub fn override_credential(
+        mut self,
+        override_credential: Arc<dyn S3CredentialProvider>,
+    ) -> Self {
+        self.override_credential = Some(override_credential);
         self
     }
 
@@ -1002,6 +1018,7 @@ impl Builder for S3Builder {
                 allow_anonymous: self.config.allow_anonymous,
                 disable_list_objects_v2: self.config.disable_list_objects_v2,
                 enable_request_payer: self.config.enable_request_payer,
+                override_credential: self.override_credential,
                 signer,
                 loader,
                 credential_loaded: AtomicBool::new(false),

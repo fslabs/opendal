@@ -33,6 +33,10 @@ mod writer;
 mod backend;
 #[cfg(feature = "services-s3")]
 pub use backend::S3Builder as S3;
+#[cfg(feature = "services-s3")]
+pub use core::S3CredentialProvider;
+#[cfg(feature = "services-s3")]
+pub use reqsign::AwsCredential;
 
 mod config;
 pub use config::S3Config;
