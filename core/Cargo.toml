@@ -30,7 +30,7 @@ repository = "https://github.com/apache/opendal"
 rust-version = "1.82"
 version = "0.55.0-fsl-pre-2"
 
-publish = ["foresight-mining-software-corporation"]
+publish = ["fsl", "foresight-mining-software-corporation"]
 
 [lints.clippy]
 unused_async = "warn"
@@ -440,5 +440,5 @@ tracing-subscriber = { version = "0.3", features = [
 
 [package.metadata.fslabs.publish.cargo]
 publish = true
-alternate_registries = ["fslabs-nominal"]
+alternate_registries = ["fsl"]
 additional_args = ["--no-verify"]

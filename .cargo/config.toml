@@ -1,2 +1,5 @@
 [registries.foresight-mining-software-corporation]
 index = "ssh://git@ssh.shipyard.rs/foresight-mining-software-corporation/crate-index.git"
+[registries.fsl]
+index = "sparse+https://crates.fsl.dev/api/v1/crates/"
+credential-provider = ["cargo:token"]
