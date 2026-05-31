@@ -31,6 +31,8 @@ pub struct FsCore {
     pub info: Arc<AccessorInfo>,
     pub root: PathBuf,
     pub atomic_write_dir: Option<PathBuf>,
+    /// See [`crate::services::FsConfig::disable_write_sync`].
+    pub disable_write_sync: bool,
     pub buf_pool: oio::PooledBuf,
 }
 

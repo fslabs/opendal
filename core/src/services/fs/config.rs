@@ -30,4 +30,17 @@ pub struct FsConfig {
 
     /// tmp dir for atomic write
     pub atomic_write_dir: Option<String>,
+
+    /// Skip the per-write `fsync` (`File::sync_all`) performed on writer close.
+    ///
+    /// opendal normally fsyncs every write for crash durability. When the
+    /// caller's source of truth is upstream — e.g. a read-through cache that can
+    /// re-fetch a corrupted/partial file — that per-write fsync is pure overhead
+    /// and serializes badly behind the filesystem journal under concurrency.
+    /// Set this to skip it.
+    ///
+    /// Atomic *visibility* is unaffected: when `atomic_write_dir` is set the
+    /// tempfile + rename still makes each write appear atomically to readers;
+    /// only crash *durability* is dropped. Defaults to `false` (fsync on).
+    pub disable_write_sync: bool,
 }

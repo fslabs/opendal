@@ -69,6 +69,18 @@ impl FsBuilder {
 
         self
     }
+
+    /// Skip the per-write `fsync` (`File::sync_all`) on writer close.
+    ///
+    /// See [`crate::services::FsConfig::disable_write_sync`] for the full
+    /// tradeoff. In short: keeps atomic visibility (rename) when
+    /// `atomic_write_dir` is set, drops only crash durability. Defaults to
+    /// `false` (fsync on).
+    pub fn disable_write_sync(mut self, disable: bool) -> Self {
+        self.config.disable_write_sync = disable;
+
+        self
+    }
 }
 
 impl Builder for FsBuilder {
@@ -174,6 +186,7 @@ impl Builder for FsBuilder {
                 },
                 root,
                 atomic_write_dir,
+                disable_write_sync: self.config.disable_write_sync,
                 buf_pool: oio::PooledBuf::new(16).with_initial_capacity(256 * 1024),
             }),
         })

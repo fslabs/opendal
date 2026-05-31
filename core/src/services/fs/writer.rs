@@ -34,6 +34,9 @@ pub struct FsWriter {
     /// The temp_path is used to specify whether we should move to target_path after the file has been closed.
     temp_path: Option<PathBuf>,
     f: tokio::fs::File,
+    /// When true, skip the `sync_all` (fsync) on close. See
+    /// [`crate::services::FsConfig::disable_write_sync`].
+    disable_write_sync: bool,
 }
 
 impl FsWriter {
@@ -48,6 +51,7 @@ impl FsWriter {
                 target_path,
                 temp_path: None,
                 f: target_file,
+                disable_write_sync: core.disable_write_sync,
             });
         }
 
@@ -75,6 +79,7 @@ impl FsWriter {
             target_path,
             temp_path,
             f,
+            disable_write_sync: core.disable_write_sync,
         })
     }
 }
@@ -96,7 +101,9 @@ impl oio::Write for FsWriter {
 
     async fn close(&mut self) -> Result<Metadata> {
         self.f.flush().await.map_err(new_std_io_error)?;
-        self.f.sync_all().await.map_err(new_std_io_error)?;
+        if !self.disable_write_sync {
+            self.f.sync_all().await.map_err(new_std_io_error)?;
+        }
 
         if let Some(temp_path) = &self.temp_path {
             tokio::fs::rename(temp_path, &self.target_path)
@@ -163,7 +170,9 @@ impl oio::PositionWrite for FsWriter {
             .await;
 
         f.flush().map_err(new_std_io_error)?;
-        f.sync_all().map_err(new_std_io_error)?;
+        if !self.disable_write_sync {
+            f.sync_all().map_err(new_std_io_error)?;
+        }
 
         if let Some(temp_path) = &self.temp_path {
             tokio::fs::rename(temp_path, &self.target_path)
