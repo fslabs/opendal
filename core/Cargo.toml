@@ -274,7 +274,7 @@ opendal-layer-timeout = { path = "layers/timeout", version = "0.59.1", optional 
 opendal-layer-tracing = { path = "layers/tracing", version = "0.59.1", optional = true, default-features = false }
 opendal-service-aliyun-drive = { path = "services/aliyun-drive", version = "0.59.1", optional = true, default-features = false }
 opendal-service-alluxio = { path = "services/alluxio", version = "0.59.1", optional = true, default-features = false }
-opendal-service-azblob = { path = "services/azblob", version = "0.59.1", optional = true, default-features = false }
+opendal-service-azblob = { path = "services/azblob", version = "0.59.1-fsl.2", optional = true, default-features = false }
 opendal-service-azdls = { path = "services/azdls", version = "0.59.1", optional = true, default-features = false }
 opendal-service-azfile = { path = "services/azfile", version = "0.59.1", optional = true, default-features = false }
 opendal-service-b2 = { path = "services/b2", version = "0.59.1", optional = true, default-features = false }

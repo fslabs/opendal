@@ -18,6 +18,7 @@
 [package]
 description = "Apache OpenDAL Azure Blob Storage service implementation"
 name = "opendal-service-azblob"
+publish = ["fsl"]
 readme = "README.md"
 
 authors = { workspace = true }
@@ -26,7 +27,7 @@ homepage = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
 rust-version = { workspace = true }
-version = { workspace = true }
+version = "0.59.1-fsl.2"
 
 [package.metadata.docs.rs]
 all-features = true
