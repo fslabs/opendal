@@ -45,6 +45,19 @@ Services that send HTTP requests also require an HTTP transport in
 `OperationContext`. See the
 [`opendal-core` composition example](https://crates.io/crates/opendal-core).
 
+## CRC32C checksums
+
+The `checksum-crc32c` feature enables CRC32C upload checksums and is enabled by default.
+Disable default features when CRC32C checksums are not needed:
+
+```toml
+opendal-service-s3 = { version = "0.59", default-features = false }
+```
+
+Reads, writes without checksums, and MD5 checksums remain available. Configuring
+`checksum_algorithm("crc32c")` without this feature returns a configuration error when
+building the service.
+
 ## Documentation
 
 - [Service configuration and examples](https://opendal.apache.org/services/s3)
