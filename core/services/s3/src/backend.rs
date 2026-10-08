@@ -666,7 +666,7 @@ impl S3Builder {
     /// This is necessary when writing to AWS S3 Buckets with Object Lock enabled for example.
     ///
     /// Available options:
-    /// - "crc32c"
+    /// - "crc32c", requires the default-enabled `checksum-crc32c` feature
     /// - "md5"
     pub fn checksum_algorithm(mut self, checksum_algorithm: &str) -> Self {
         self.config.checksum_algorithm = Some(checksum_algorithm.to_string());
@@ -898,7 +898,15 @@ impl Builder for S3Builder {
             };
 
         let checksum_algorithm = match config.checksum_algorithm.as_deref() {
+            #[cfg(feature = "checksum-crc32c")]
             Some("crc32c") => Some(ChecksumAlgorithm::Crc32c),
+            #[cfg(not(feature = "checksum-crc32c"))]
+            Some("crc32c") => {
+                return Err(Error::new(
+                    ErrorKind::ConfigInvalid,
+                    "CRC32C checksums require the checksum-crc32c feature",
+                ));
+            }
             Some("md5") => Some(ChecksumAlgorithm::Md5),
             None => None,
             v => {
@@ -2077,10 +2085,28 @@ mod tests {
             .bucket("test")
             .region("us-east-1")
             .endpoint("http://127.0.0.1:9000")
-            .checksum_algorithm("crc32c")
+            .checksum_algorithm("md5")
             .build()
             .unwrap();
         assert!(!backend.capability().write_can_copy_from);
+    }
+
+    #[test]
+    fn crc32c_configuration_matches_feature() {
+        let result = S3Builder::default()
+            .bucket("test")
+            .region("us-east-1")
+            .endpoint("http://127.0.0.1:9000")
+            .checksum_algorithm("crc32c")
+            .build();
+        #[cfg(feature = "checksum-crc32c")]
+        assert!(!result.unwrap().capability().write_can_copy_from);
+        #[cfg(not(feature = "checksum-crc32c"))]
+        {
+            let error = result.unwrap_err();
+            assert_eq!(error.kind(), ErrorKind::ConfigInvalid);
+            assert!(error.to_string().contains("checksum-crc32c"));
+        }
     }
 
     #[test]
