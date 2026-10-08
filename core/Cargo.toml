@@ -205,7 +205,7 @@ services-redis-native-tls = [
   "opendal-service-redis?/native-tls",
 ]
 services-rocksdb = ["dep:opendal-service-rocksdb"]
-services-s3 = ["dep:opendal-service-s3"]
+services-s3 = ["dep:opendal-service-s3", "opendal-service-s3/checksum-crc32c"]
 services-seafile = ["dep:opendal-service-seafile"]
 services-sftp = ["dep:opendal-service-sftp"]
 services-sled = ["dep:opendal-service-sled"]

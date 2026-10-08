@@ -256,6 +256,7 @@ impl oio::MultipartWrite for S3Writer {
                     ..Default::default()
                 },
                 Some(checksum_algorithm) => match checksum_algorithm {
+                    #[cfg(feature = "checksum-crc32c")]
                     ChecksumAlgorithm::Crc32c => CompleteMultipartUploadRequestPart {
                         part_number: p.part_number,
                         etag: p.etag.clone(),

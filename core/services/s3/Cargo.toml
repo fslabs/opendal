@@ -31,10 +31,14 @@ version = { workspace = true }
 [package.metadata.docs.rs]
 all-features = true
 
+[features]
+default = ["checksum-crc32c"]
+checksum-crc32c = ["dep:crc-fast"]
+
 [dependencies]
 base64 = { workspace = true }
 bytes = { workspace = true }
-crc-fast = "1.9.0"
+crc-fast = { version = "1.9.0", optional = true }
 http = { workspace = true }
 log = { workspace = true }
 md-5 = "0.11.0"

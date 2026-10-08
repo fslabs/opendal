@@ -19,12 +19,16 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Write;
 
+#[cfg(feature = "checksum-crc32c")]
 use base64::Engine;
+#[cfg(feature = "checksum-crc32c")]
 use base64::prelude::BASE64_STANDARD;
 use bytes::Buf;
 use bytes::Bytes;
 use constants::X_AMZ_META_PREFIX;
+#[cfg(feature = "checksum-crc32c")]
 use crc_fast::CrcAlgorithm;
+#[cfg(feature = "checksum-crc32c")]
 use crc_fast::Digest as CrcDigest;
 use http::HeaderValue;
 use http::Request;
@@ -157,6 +161,7 @@ pub(crate) struct S3UploadPartCopyRequest<'a> {
     pub(crate) operation: Operation,
 }
 
+#[cfg(feature = "checksum-crc32c")]
 fn format_crc32c_iter(body: Buffer) -> String {
     let mut digest = CrcDigest::new(CrcAlgorithm::Crc32Iscsi);
     body.for_each(|b| digest.update(&b));
@@ -371,6 +376,7 @@ impl S3Core {
     pub fn calculate_checksum(&self, body: &Buffer) -> Option<String> {
         match self.checksum_algorithm {
             None => None,
+            #[cfg(feature = "checksum-crc32c")]
             Some(ChecksumAlgorithm::Crc32c) => Some(format_crc32c_iter(body.clone())),
             Some(ChecksumAlgorithm::Md5) => Some(format_content_md5_iter(body.clone())),
         }
@@ -1672,6 +1678,7 @@ pub struct ListObjectVersionsOutputDeleteMarker {
 }
 
 pub enum ChecksumAlgorithm {
+    #[cfg(feature = "checksum-crc32c")]
     Crc32c,
     /// Mapping to the `Content-MD5` header from S3.
     Md5,
@@ -1679,6 +1686,7 @@ pub enum ChecksumAlgorithm {
 impl ChecksumAlgorithm {
     pub fn to_header_name(&self) -> HeaderName {
         match self {
+            #[cfg(feature = "checksum-crc32c")]
             Self::Crc32c => HeaderName::from_static("x-amz-checksum-crc32c"),
             Self::Md5 => HeaderName::from_static("content-md5"),
         }
@@ -1690,6 +1698,7 @@ impl Display for ChecksumAlgorithm {
             f,
             "{}",
             match self {
+                #[cfg(feature = "checksum-crc32c")]
                 Self::Crc32c => "CRC32C",
                 Self::Md5 => "MD5",
             }
@@ -1703,6 +1712,23 @@ mod tests {
     use bytes::Bytes;
 
     use super::*;
+
+    #[cfg(feature = "checksum-crc32c")]
+    #[test]
+    fn crc32c_empty_body() {
+        assert_eq!(format_crc32c_iter(Buffer::new()), "AAAAAA==");
+    }
+
+    #[cfg(feature = "checksum-crc32c")]
+    #[test]
+    fn crc32c_segmented_body() {
+        let body = Buffer::from(vec![
+            Bytes::from_static(b"123"),
+            Bytes::from_static(b"456"),
+            Bytes::from_static(b"789"),
+        ]);
+        assert_eq!(format_crc32c_iter(body), "4waSgw==");
+    }
 
     /// This example is from https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html#API_CreateMultipartUpload_Examples
     #[test]
