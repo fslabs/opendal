@@ -30,6 +30,9 @@ pub struct FsConfig {
 
     /// tmp dir for atomic write
     pub atomic_write_dir: Option<String>,
+
+    /// Defer durability until an explicit filesystem flush by the caller.
+    pub defer_sync: bool,
 }
 
 impl opendal_core::Configurator for FsConfig {

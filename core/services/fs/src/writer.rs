@@ -15,9 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#[cfg(unix)]
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -35,12 +35,44 @@ pub struct FsWriter {
     /// The temp_path is used to specify whether we should move to target_path after the file has been closed.
     temp_path: Option<PathBuf>,
     f: tokio::fs::File,
+    defer_sync: bool,
     /// User metadata to be written to xattr on Unix systems.
     #[cfg(unix)]
     user_metadata: Option<HashMap<String, String>>,
 }
 
 impl FsWriter {
+    async fn sync_all(&self) -> Result<()> {
+        if self.defer_sync && cfg!(target_os = "linux") {
+            return Ok(());
+        }
+
+        #[cfg(target_vendor = "apple")]
+        if self.defer_sync {
+            let file = self
+                .f
+                .try_clone()
+                .await
+                .map_err(new_std_io_error)?
+                .into_std()
+                .await;
+            return tokio::task::spawn_blocking(move || {
+                use std::os::fd::AsRawFd;
+                // SAFETY: the file descriptor remains open throughout this call.
+                if unsafe { libc::fsync(file.as_raw_fd()) } == -1 {
+                    Err(std::io::Error::last_os_error())
+                } else {
+                    Ok(())
+                }
+            })
+            .await
+            .map_err(new_task_join_error)?
+            .map_err(new_std_io_error);
+        }
+
+        self.f.sync_all().await.map_err(new_std_io_error)
+    }
+
     pub async fn create(core: Arc<FsCore>, path: &str, op: OpWrite) -> Result<Self> {
         let target_path = core.ensure_write_abs_path(&core.root, path).await?;
 
@@ -61,6 +93,7 @@ impl FsWriter {
                 target_path,
                 temp_path: None,
                 f: target_file,
+                defer_sync: core.defer_sync,
                 #[cfg(unix)]
                 user_metadata,
             });
@@ -90,6 +123,7 @@ impl FsWriter {
             target_path,
             temp_path,
             f,
+            defer_sync: core.defer_sync,
             #[cfg(unix)]
             user_metadata,
         })
@@ -113,7 +147,7 @@ impl oio::Write for FsWriter {
 
     async fn close(&mut self) -> Result<Metadata> {
         self.f.flush().await.map_err(new_std_io_error)?;
-        self.f.sync_all().await.map_err(new_std_io_error)?;
+        self.sync_all().await?;
 
         if let Some(temp_path) = &self.temp_path {
             tokio::fs::rename(temp_path, &self.target_path)
@@ -178,16 +212,7 @@ impl oio::PositionWrite for FsWriter {
     }
 
     async fn close(&self, _size: u64) -> Result<Metadata> {
-        let mut f = self
-            .f
-            .try_clone()
-            .await
-            .map_err(new_std_io_error)?
-            .into_std()
-            .await;
-
-        f.flush().map_err(new_std_io_error)?;
-        f.sync_all().map_err(new_std_io_error)?;
+        self.sync_all().await?;
 
         if let Some(temp_path) = &self.temp_path {
             tokio::fs::rename(temp_path, &self.target_path)
@@ -201,7 +226,7 @@ impl oio::PositionWrite for FsWriter {
             FsCore::set_user_metadata(&self.target_path, user_metadata)?;
         }
 
-        let file_meta = f.metadata().map_err(new_std_io_error)?;
+        let file_meta = self.f.metadata().await.map_err(new_std_io_error)?;
         let mode = if file_meta.is_file() {
             EntryMode::FILE
         } else if file_meta.is_dir() {

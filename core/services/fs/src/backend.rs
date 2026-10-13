@@ -37,6 +37,19 @@ pub struct FsBuilder {
 }
 
 impl FsBuilder {
+    /// Defer durability until the caller explicitly flushes the filesystem.
+    /// Open the filesystem flush handle before writing. Prepare directory
+    /// entries and complete the final flush before publishing objects. Use a
+    /// separate operator for this batch. Disabled by default.
+    ///
+    /// Linux relies on the caller's final `syncfs`. macOS uses per-file `fsync`
+    /// before the caller's final drive-cache flush. Windows and other systems
+    /// retain per-file `sync_all`.
+    pub fn defer_sync(mut self, enabled: bool) -> Self {
+        self.config.defer_sync = enabled;
+        self
+    }
+
     /// Set root for backend.
     pub fn root(mut self, root: &str) -> Self {
         self.config.root = if root.is_empty() {
@@ -162,6 +175,7 @@ impl Builder for FsBuilder {
                 },
                 root,
                 atomic_write_dir,
+                defer_sync: self.config.defer_sync,
                 buf_pool: oio::PooledBuf::new(16).with_initial_capacity(256 * 1024),
             }),
         })
