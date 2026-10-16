@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#[cfg(unix)]
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
@@ -29,6 +30,7 @@ pub struct FsCore {
     pub capability: Capability,
     pub root: PathBuf,
     pub atomic_write_dir: Option<PathBuf>,
+    pub defer_sync: bool,
     pub buf_pool: oio::PooledBuf,
 }
 

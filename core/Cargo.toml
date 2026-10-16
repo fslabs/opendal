@@ -359,3 +359,7 @@ sha2 = { workspace = true }
 size = "0.5"
 tokio = { workspace = true, features = ["fs", "macros", "rt-multi-thread"] }
 uuid = { workspace = true, features = ["serde", "v4"] }
+
+# Use the workspace core for local checks; git consumers share the published core.
+[patch.crates-io.opendal-core]
+path = "core"

@@ -34,7 +34,7 @@ all-features = true
 [dependencies]
 bytes = { workspace = true }
 log = { workspace = true }
-opendal-core = { path = "../../core", version = "0.59.1", default-features = false, features = [
+opendal-core = { version = "=0.59.1", default-features = false, features = [
   "internal-tokio-rt",
 ] }
 serde = { workspace = true, features = ["derive"] }
@@ -42,6 +42,9 @@ tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
 
 [target.'cfg(unix)'.dependencies]
 xattr = "1"
+
+[target.'cfg(target_vendor = "apple")'.dependencies]
+libc = "0.2"
 
 [dev-dependencies]
 tempfile = "3"
