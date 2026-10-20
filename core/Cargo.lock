@@ -6940,9 +6940,10 @@ dependencies = [
 
 [[package]]
 name = "opendal-service-fs"
-version = "0.59.1"
+version = "0.59.1-fsl.1"
 dependencies = [
  "bytes",
+ "libc",
  "log",
  "opendal-core",
  "serde",

@@ -38,5 +38,5 @@ opendal-core = { path = "../../core", version = "0.59.1", default-features = fal
 [dev-dependencies]
 futures = { workspace = true }
 opendal-core = { path = "../../core", version = "0.59.1" }
-opendal-service-fs = { path = "../../services/fs", version = "0.59.1" }
+opendal-service-fs = { path = "../../services/fs", version = "0.59.1-fsl.1" }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
