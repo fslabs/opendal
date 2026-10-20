@@ -289,7 +289,7 @@ opendal-service-dropbox = { path = "services/dropbox", version = "0.59.1", optio
 opendal-service-etcd = { path = "services/etcd", version = "0.59.1", optional = true, default-features = false }
 opendal-service-foundationdb = { path = "services/foundationdb", version = "0.59.1", optional = true, default-features = false }
 opendal-service-foyer = { path = "services/foyer", version = "0.59.1", optional = true, default-features = false }
-opendal-service-fs = { path = "services/fs", version = "0.59.1", optional = true, default-features = false }
+opendal-service-fs = { path = "services/fs", version = "0.59.1-fsl.1", optional = true, default-features = false }
 opendal-service-ftp = { path = "services/ftp", version = "0.59.1", optional = true, default-features = false }
 opendal-service-gcs = { path = "services/gcs", version = "0.59.1", optional = true, default-features = false }
 opendal-service-gcs-grpc = { path = "services/gcs-grpc", version = "0.59.1", optional = true, default-features = false }
